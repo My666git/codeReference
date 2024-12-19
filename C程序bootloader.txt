@@ -1,0 +1,28 @@
+typedef void (*pFunction)(void);
+#define APPLICATION_ADDRESS 0x08001000
+
+void JumpToApplication(void)
+{
+    pFunction JumpToApplication;
+    uint32_t *appStack;
+    
+    // 1. Check if the address is valid (optional)
+    if (((*(volatile uint32_t*)APPLICATION_ADDRESS) & 0x2FFE0000) == 0x20000000)
+    {
+        // 2. Initialize the application stack pointer
+        appStack = (uint32_t*)APPLICATION_ADDRESS;
+        __set_MSP(*appStack);
+
+        // 3. Set the vector table to point to the application
+        SCB->VTOR = APPLICATION_ADDRESS & SCB_VTOR_TBLOFF_Msk;
+
+        // 4. Jump to application
+        JumpToApplication = (pFunction)(*(volatile uint32_t*)(APPLICATION_ADDRESS + 4));
+        JumpToApplication();
+    }
+    else
+    {
+        // Invalid application address or application is not valid
+        while (1); // or handle the error as appropriate
+    }
+}

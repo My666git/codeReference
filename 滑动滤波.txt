@@ -1,0 +1,49 @@
+
+typedef struct tagCircleFilterIntBuf {
+
+	char bmIndex;
+  int iBuf[ADCBUFSIZE];
+} CircleFilterIntBuf, *pCircleFilterIntBuf;
+
+
+
+
+//ADC滤波
+int CircleFilter( pCircleFilterIntBuf b, int iNewValue)
+{
+  //输入为新的数值，输出为滤波后的数据。
+  char i,idx;
+  long lTemp;
+  int iMax,iMin,iAvg;
+
+  b->iBuf[b->bmIndex] = iNewValue;
+
+  //记录最大，最小值的初始值。
+  iMax=b->iBuf[b->bmIndex];
+  iMin=iMax;
+  lTemp = 0L;
+  for(i=0;i<ADCBUFSIZE;i++)
+  {
+    idx = ( i + b->bmIndex ) % ADCBUFSIZE;
+
+    lTemp += b->iBuf[ idx ] ;
+
+    if(iMax > b->iBuf[idx]) iMax=b->iBuf[idx];
+    if(iMin < b->iBuf[idx]) iMin=b->iBuf[idx];
+  }
+
+  //调整缓冲指针。
+  b->bmIndex ++;
+  b->bmIndex = b->bmIndex % ADCBUFSIZE;
+
+  //The average filtered value
+  iAvg=(int)((float)(lTemp-iMax-iMin)/(float)(ADCBUFSIZE-2));
+return iAvg;
+}
+
+
+
+
+
+
+

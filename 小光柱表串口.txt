@@ -1,0 +1,201 @@
+order_li = {
+    "ProductPushV":    [171, 1, 1, 0, 0, 172],
+    "ProductDisPushV": [171, 1, 2, 0, 0, 172],
+    "JlinkConn":       [171, 1, 3, 0, 0, 172],
+    "JlinkDisConn":    [171, 1, 4, 0, 0, 172],
+    "Sw_Mode_V":       [171, 1, 5, 0, 0, 172],
+    "Sw_Mode_I":       [171, 1, 6, 0, 0, 172],
+    "Sw_Ch_AIN1":      [171, 1, 7, 0, 0, 172],
+    "Sw_Ch_AIN2":      [171, 1, 8, 0, 0, 172],
+    "Enable_Usart2":   [171, 1, 9, 0, 0, 172],
+    "Disable_Usart2":  [171, 1, 10, 0, 0, 172],
+
+    "get_ain1_4mA":    [171, 2, 1, 0, 0, 172],
+    "get_ain1_20mA":   [171, 2, 2, 0, 0, 172],
+    "get_ain2_4mA":    [171, 2, 3, 0, 0, 172],
+    "get_ain2_20mA":   [171, 2, 4, 0, 0, 172],
+    "get_ain1_0v1":    [171, 2, 5, 0, 0, 172],
+    "get_ain1_10V":    [171, 2, 6, 0, 0, 172],
+    "get_ain2_0v1":    [171, 2, 7, 0, 0, 172],
+    "get_ain2_10V":    [171, 2, 8, 0, 0, 172],
+    "write_flash_i":   [171, 2, 9, 0, 0, 172],
+    "write_flash_v":   [171, 2, 10, 0, 0, 172],
+    "on_led":          [171, 2, 11, 0, 0, 172],
+    "off_led":         [171, 2, 12, 0, 0, 172],
+    "read_flash":      [171, 2, 13, 0, 0, 172],
+    "read_adc_struct": [171, 2, 14, 0, 0, 172],
+    # "en_prod_config":  [171, 2, 15, 0, 0, 172],  # 未使用
+    "dis_prod_config": [171, 2, 15, 0, 0, 172],
+}
+
+
+
+
+
+USART_SendData(USART1, USART_RX_BUF[t]);//向串口1发送数据
+while(USART_GetFlagStatus(USART1,USART_FLAG_TC)!=SET);//等待发送结束
+
+
+uint8_t UsartFlag = 0;
+uint8_t WriteCurrFlag = 0; //写电流数组标志
+unsigned char ConfigBuf[ConfigBufSize] = {0};  // 电压参数数组
+unsigned char ConfigBuf_i[ConfigBufSize] = {0}; // 电流参数数组
+uint8_t ReadFlash_Flag = 0;
+uint8_t READ_ADC_PAR_FLAG = 0;
+void USART1_IRQHandler(void)
+{
+	uint16_t Res = 0;
+	static char j = 0;
+	static char i = 0;
+	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
+	{
+		Res = USART_ReceiveData(USART1);
+		
+		if(Res == 'v') //参数写入ConfigBuf
+		{
+			UsartFlag |= (1<<2);
+		}
+		
+		//写电压数组
+		if((UsartFlag & 0x04) == 0x04)
+		{
+			ConfigBuf[j] = Res;
+			j++;
+			if(j == ConfigBufSize)
+			{
+				j = 0;
+				UsartFlag &= ~(1<<2);
+				UsartFlag |= (1<<6); //写数组完成
+			}
+		}
+		
+		if(Res == 'i')
+		{
+			WriteCurrFlag |= 0x04;
+		}
+		
+		// 写电流数组
+		if((WriteCurrFlag & 0x04) == 0x04)
+		{
+			ConfigBuf_i[i] = Res;
+			i++;
+			if(i == ConfigBufSize)
+			{
+				i = 0;
+				WriteCurrFlag &= ~(1<<2); 
+				WriteCurrFlag |= (1<<6); //写数组完成标志
+			}
+		}	
+		
+		if(Res == 's') //进入配置循环
+		{
+			UsartFlag |= 0x80;
+		}
+		
+		if(Res == 'y') //点亮LED
+		{
+			UsartFlag |= 0x01;
+		}
+		
+		if(Res == 'r')
+		{
+			UsartFlag &= ~(1 << 0); //off led
+		}
+		
+		if(Res == 'f') //读flash
+		{
+			if((UsartFlag & 0x80) == 0x80)
+			{
+				ReadFlash_Flag = 1;
+			}
+		}
+		
+		if(Res == 'e')//结束配置
+		{
+			UsartFlag &= ~(1<<7);
+		}
+		
+		if(Res == 'a')
+		{
+			READ_ADC_PAR_FLAG = 1;
+		}
+	}
+}
+
+void ConfigMode(void)
+{
+	int i = 0;
+
+	TIM_Cmd(BASIC_TIM, DISABLE);	
+
+	while(1)
+	{
+		if((UsartFlag & 0x01) == 0x01) //上位机发送点亮LED信号
+		{
+			TestLightLED();
+		}
+		
+		if((UsartFlag & 0x80) == 0x00)
+		{
+			TIM_Cmd(BASIC_TIM, ENABLE);
+			return;
+		}
+		
+		if(ReadFlash_Flag == 1)
+		{
+			DeBugReadFlash();
+			ReadFlash_Flag = 0;
+		}
+		
+		// 写电压参数
+		if((UsartFlag & 0x40) == 0x40)
+		{
+			printf("\r\n");
+			for(i=0; i<(sizeof(ConfigBuf)/sizeof(ConfigBuf[0])); i++)
+			{
+				printf("%d   ", ConfigBuf[i]);
+			}
+			printf("\r\n");
+			
+			WriteFlash(WRITE_START_ADDR, WRITE_END_ADDR, ConfigBuf);
+			printf("write voltage buf successful...\r\n");
+			
+			AdcValueConfig_V();
+			UsartFlag &= ~(1<<6);
+		}
+		
+		// 写电流参数
+		if((WriteCurrFlag & 0x40) == 0x40)
+		{
+			printf("\r\n");
+			for(i=0; i<(sizeof(ConfigBuf_i)/sizeof(ConfigBuf_i[0])); i++)
+			{
+				printf("%d   ", ConfigBuf[i]);
+			}
+			printf("\r\n");
+			WriteFlash(WRITE_START_ADDR_I, WRITE_END_ADDR_I, ConfigBuf_i);
+			printf("write current buf successful...\r\n");
+			AdcValueConfig_I();
+			WriteCurrFlag &= ~(1<<6);
+		}
+		
+		//串口1接收数据
+		if((USART1_RX_STA & 0x80) == 0x80)
+		{
+			uint8_t copm_res = 0;
+			uint16_t crc_16_res = 0;
+			crc_16_res = usMBCRC16(USART1_RX_BUFF, CRC_DATA_LEN);
+			copm_res = compare_crc(crc_16_res, COMPCRC_LEN);
+			if(copm_res == 0)
+			{
+				printf("verify successful\r\n");
+				order_parse(USART1_RX_BUFF);
+			}
+			else
+			{
+				printf("crc_verify compare error %d\r\n", crc_16_res);
+			}
+			USART1_RX_STA = 0;
+		}
+	}
+}

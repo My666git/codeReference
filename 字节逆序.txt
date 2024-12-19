@@ -1,0 +1,11 @@
+uint32_t reversal(uint32_t base)
+{
+	uint32_t res = 0;
+	uint8_t i = 0;
+	for(i=0; i<32; i++)
+	{
+		res = res << 1;
+		res += (base>>i) & 1;
+	}
+	return res;
+}

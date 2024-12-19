@@ -1,0 +1,75 @@
+在C语言中，变量的作用域和类型是静态的，这意味着它们在编译时就已经确定，而不能在运行时根据条件动态改变。在你的代码片段中，你试图根据条件定义不同类型的变量，然后使用它们。这种做法在C语言中是不被允许的，因为变量data在不同分支中会有不同的类型，而它们本质上是不同的变量。
+
+要解决这个问题，可以考虑使用一个通用的数据类型来存储数据，然后根据需要进行类型转换。以下是一些可能的方法：
+
+使用联合体
+联合体（union）允许你在同一个内存位置存储不同类型的数据。你可以定义一个联合体来包含float和int，然后根据条件设置相应的值。
+
+c
+#include <stdio.h>
+
+typedef struct {
+    float abs_press_region;
+} st_1st_args;
+
+typedef union {
+    float fData;
+    int i32Data;
+} DataUnion;
+
+void set_data(int type, float flData, int i32Data, st_1st_args *st_1st_args_p) {
+    DataUnion data;
+    
+    if (type == 0) {
+        data.fData = flData;
+    } else {
+        data.i32Data = i32Data;
+    }
+
+    // 将数据作为浮点数存储到结构体中
+    st_1st_args_p->abs_press_region = (type == 0) ? data.fData : (float)data.i32Data;
+}
+
+int main() {
+    st_1st_args args;
+    set_data(0, 3.14f, 42, &args);
+    printf("Value: %f\n", args.abs_press_region);
+
+    set_data(1, 3.14f, 42, &args);
+    printf("Value: %f\n", args.abs_press_region);
+
+    return 0;
+}
+在这个例子中，我们定义了一个联合体DataUnion，它包含float和int两种数据类型。然后在函数set_data中，根据类型条件，将相应的数据赋值给联合体成员，并将它们转换成float类型存储到结构体成员中。
+
+使用void *指针
+另一种方法是使用void *指针，这允许你存储任何类型的数据。不过这需要你在使用时进行显式类型转换。
+
+c
+#include <stdio.h>
+
+typedef struct {
+    float abs_press_region;
+} st_1st_args;
+
+void set_data(int type, void *data, st_1st_args *st_1st_args_p) {
+    if (type == 0) {
+        st_1st_args_p->abs_press_region = *(float *)data;
+    } else {
+        st_1st_args_p->abs_press_region = (float)*(int *)data;
+    }
+}
+
+int main() {
+    st_1st_args args;
+    float flData = 3.14f;
+    int i32Data = 42;
+
+    set_data(0, &flData, &args);
+    printf("Value: %f\n", args.abs_press_region);
+
+    set_data(1, &i32Data, &args);
+    printf("Value: %f\n", args.abs_press_region);
+
+    return 0;
+}

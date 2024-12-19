@@ -1,0 +1,53 @@
+private Int32 CRC_Check(byte[] cBuffer, Int32 iBufLen)
+        {
+            Int32 i, j;
+            Int32  wCrc = 0xffff;
+            Int32  wPolynom = 0x8408;
+
+            for (i = 0; i < iBufLen; i++)
+            {
+                wCrc ^= cBuffer[i];
+
+                for (j = 0; j < 8; j++)
+                {
+                    if (Convert.ToBoolean(wCrc & 0x0001))
+                    {
+                        wCrc = (wCrc >> 1) ^ wPolynom;
+                    }
+                    else  
+                    {
+                        wCrc = wCrc >> 1;
+                    }
+                }
+            }
+            return wCrc;
+        }
+
+
+
+
+uint16_t crc_verify(uint8_t *datas, uint8_t data_len)
+{
+	int crc16 = 0xFFFF;
+	int poly = 0xA001;
+	int i = 0;
+	int j = 0;
+	for(i=0; i<data_len; i++)
+	{
+		crc16 = datas[i] ^ crc16;
+		for(j=0; j<8; j++)
+		{
+			if((1 & (crc16)) == 1)
+			{
+				crc16 = crc16 >> 1;
+				crc16 = crc16 ^ poly;
+			}
+			else
+			{
+				crc16 = crc16 >> 1;
+			}
+		}
+	}
+	
+	return crc16;
+}
