@@ -1,0 +1,77 @@
+在 Python 中创建虚拟环境是一种管理项目依赖的常见做法，它能够避免不同项目之间的依赖冲突。Python 提供了内置的 venv 模块来创建虚拟环境，下面是如何在不同平台上创建和使用虚拟环境的步骤：
+
+步骤 1：检查 Python 版本
+首先，确保你已经安装了 Python 3.3 或更高版本，可以在终端中运行以下命令来检查 Python 版本：
+
+bash
+python --version
+# 或者
+python3 --version
+如果系统中有多个版本的 Python，可以使用 python3 来指明。
+
+步骤 2：创建虚拟环境
+选择一个目录：你可以在任意目录下创建虚拟环境。可以先创建一个文件夹来存放虚拟环境和你的项目代码。
+
+bash
+mkdir my_project
+cd my_project
+创建虚拟环境：在你想要存放虚拟环境的目录下，运行以下命令来创建一个新的虚拟环境。
+
+bash
+python -m venv venv
+# 或者
+python3 -m venv venv
+这会在当前目录下创建一个名为 venv 的子目录，里面包含虚拟环境的所有必要文件。
+
+步骤 3：激活虚拟环境
+根据操作系统的不同，激活虚拟环境的命令略有不同：
+
+在 Windows 上：
+bash
+.\venv\Scripts\activate
+在 macOS 或 Linux 上：
+bash
+source venv/bin/activate
+激活成功后，你会看到命令行提示符发生变化，通常会显示虚拟环境的名称，例如：
+
+bash
+(venv) $
+这表明你已经成功进入虚拟环境，所有在虚拟环境中的 Python 包和命令都与全局 Python 环境隔离。
+
+步骤 4：安装依赖
+一旦虚拟环境激活，你就可以使用 pip 安装你需要的第三方库。例如：
+
+bash
+pip install requests
+这些库将只会安装在当前虚拟环境中，而不会影响系统的全局环境。
+
+步骤 5：退出虚拟环境
+当你完成工作并想退出虚拟环境时，只需运行：
+
+bash
+deactivate
+这样会将你从虚拟环境中退出，恢复到系统的全局 Python 环境。
+
+步骤 6：删除虚拟环境
+如果你不再需要某个虚拟环境，只需删除包含该虚拟环境的目录即可。例如：
+
+bash
+rm -rf venv
+附加：管理依赖
+1. 生成 requirements.txt
+为了便于以后重现环境，或者共享给其他人，你可以将当前虚拟环境的所有依赖包列出到一个 requirements.txt 文件中：
+
+bash
+pip freeze > requirements.txt
+2. 安装依赖
+其他人可以通过以下命令安装 requirements.txt 中列出的依赖：
+
+bash
+pip install -r requirements.txt
+这样可以确保安装与原环境完全相同的包和版本。
+
+总结
+使用 python -m venv venv 创建虚拟环境。
+激活虚拟环境后可以隔离依赖，避免与系统全局环境冲突。
+使用 pip 安装依赖，并通过 requirements.txt 管理依赖。
+当不需要虚拟环境时，可以使用 deactivate 退出，或者直接删除虚拟环境目录。

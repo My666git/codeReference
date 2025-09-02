@@ -1,3 +1,4 @@
+import subprocess
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout
 from UI.Gui import Ui_MainWindow
@@ -34,6 +35,18 @@ class ShowGraph(QMainWindow, Ui_MainWindow):
         self.conn_ser_btn.clicked.connect(self.conn_ser)  # 连接串口
         self.clear_text_btn.clicked.connect(self.clear_text)  # 清空文本框
         self.refresh_btn.clicked.connect(self.init_ser_port)
+        self.Cmd.clicked.connect(self.cmd_command)
+
+    def cmd_command(self):
+        result = subprocess.run(
+            ['cmd', '/c', 'java --version'],
+            capture_output=True,
+            text=True,
+            creationflags=subprocess.CREATE_NO_WINDOW
+        )
+
+        # 将输出显示在文本框中
+        self.set_str_to_text(result.stdout)
 
     def init_ser_port(self):
         self.port_box.clear()
