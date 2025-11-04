@@ -1,0 +1,8 @@
+<RCC>
+  <qresource prefix="refresh">
+    <file>img/refresh.png</file>
+  </qresource>
+  <qresource prefix="icon">
+    <file>img/m.png</file>
+  </qresource>
+</RCC>

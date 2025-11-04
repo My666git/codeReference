@@ -6,7 +6,7 @@ typedef struct tagCircleFilterIntBuf {
 } CircleFilterIntBuf, *pCircleFilterIntBuf;
 
 
-
+pCircleFilterIntBuf adcValueBuf;
 
 //ADC滤波
 int CircleFilter( pCircleFilterIntBuf b, int iNewValue)
@@ -28,8 +28,8 @@ int CircleFilter( pCircleFilterIntBuf b, int iNewValue)
 
     lTemp += b->iBuf[ idx ] ;
 
-    if(iMax > b->iBuf[idx]) iMax=b->iBuf[idx];
-    if(iMin < b->iBuf[idx]) iMin=b->iBuf[idx];
+    if(iMax < b->iBuf[idx]) iMax=b->iBuf[idx];
+    if(iMin > b->iBuf[idx]) iMin=b->iBuf[idx];
   }
 
   //调整缓冲指针。
